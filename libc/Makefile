@@ -16,19 +16,19 @@
 
 DESTDIR ?= /opt/ps5-payload-sdk
 
-CCS := clang-20 clang-19 clang-18 clang-17 clang-16 clang-15 clang
-CCS := $(foreach CC,$(CCS),$(if $(shell command -v $(CC) 2> /dev/null),$(CC)))
-CC  := $(firstword $(CCS))
-ifndef CC
-    $(error No suitable compiler found)
+LLVM_CONFIGS = llvm-config-20 llvm-config-19 llvm-config-18 llvm-config-17 \
+               llvm-config-16 llvm-config-15 llvm-config
+LLVM_CONFIGS := $(foreach LLVM_CONFIG, $(LLVM_CONFIGS), \
+                    $(if $(shell command -v $(LLVM_CONFIG) 2> /dev/null), \
+                        $(LLVM_CONFIG)))
+LLVM_CONFIG := $(firstword $(LLVM_CONFIGS))
+ifndef LLVM_CONFIG
+    $(error Unable to find llvm-config)
 endif
 
-ARS := llvm-ar-20 llvm-ar-19 llvm-ar-18 llvm-ar-17 llvm-ar-16 llvm-ar-15 llvm-ar ar
-ARS := $(foreach AR,$(ARS),$(if $(shell command -v $(AR) 2> /dev/null),$(AR)))
-AR  := $(firstword $(ARS))
-ifndef AR
-    $(error No suitable archiver found)
-endif
+LLVM_BINDIR=$(shell ${LLVM_CONFIG} --bindir)
+CC="${LLVM_BINDIR}/clang"
+AR="${LLVM_BINDIR}/llvm-ar"
 
 CFLAGS := -target x86_64-sie-ps5 -fPIC  -fno-plt -fno-stack-protector
 CFLAGS += -nobuiltininc -isystem ../include/freebsd
