@@ -1,0 +1,35 @@
+name: macos-latest
+
+on:
+  push:
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.txt"
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "**/*.txt"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install prerequisites
+        run: |
+          brew update
+          brew install llvm@18
+
+      - name: Build SDK
+        run: make install
+        env:
+          LLVM_CONFIG: /opt/homebrew/opt/llvm@18/bin/llvm-config
+          DESTDIR: ${{ runner.tool_cache }}/ps5-payload-sdk
+
+      - name: Build Tests
+        run: make -C samples/test_privileges
+        env:
+          LLVM_CONFIG: /opt/homebrew/opt/llvm@18/bin/llvm-config
+          PS5_PAYLOAD_SDK: ${{ runner.tool_cache }}/ps5-payload-sdk
